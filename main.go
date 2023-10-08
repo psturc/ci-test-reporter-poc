@@ -22,6 +22,8 @@ import (
 
 	reporters "github.com/onsi/ginkgo/v2/reporters"
 	types "github.com/onsi/ginkgo/v2/types"
+
+	"github.com/magefile/mage/sh"
 )
 
 const bucketName = "origin-ci-test"
@@ -33,12 +35,18 @@ const junitFilename = "e2e-report.xml"
 
 var bucketHandle *storage.BucketHandle
 
+var artifactDir string
+
 // listFiles lists objects within specified bucket.
 func main() {
 
 	rhtapJunitSuites := &reporters.JUnitTestSuites{}
 	openshiftCiJunit := reporters.JUnitTestSuite{Name: "openshift-ci job", Properties: reporters.JUnitProperties{Properties: []reporters.JUnitProperty{}}}
 
+	artifactDir = os.Getenv("ARTIFACT_DIR")
+	if artifactDir == "" {
+		artifactDir = "/tmp"
+	}
 	jobID := os.Getenv("PROW_JOB_ID")
 
 	pjYAML, err := getProwJobYAML(jobID)
@@ -76,11 +84,7 @@ func main() {
 
 	it := bucketHandle.Objects(ctx, &storage.Query{Prefix: objectPrefix})
 
-	tmpDir, err := os.MkdirTemp(os.TempDir(), "gcs")
-	if err != nil {
-		log.Fatal("can't create temp dir")
-	}
-	fmt.Println("tmp dir:", tmpDir)
+	fmt.Println("tmp dir:", artifactDir)
 
 	for {
 		attrs, err := it.Next()
@@ -145,7 +149,7 @@ func main() {
 
 		}
 	}
-	localFilePath := tmpDir + "/junit.xml"
+	localFilePath := artifactDir + "/junit.xml"
 
 	rhtapJunitSuites.TestSuites = append(rhtapJunitSuites.TestSuites, openshiftCiJunit)
 
@@ -158,6 +162,13 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Println(localFilePath)
+
+	if err := sh.RunV("go", "install", "-mod=mod", "github.com/psturc/junit2html@experiment"); err != nil {
+		log.Fatal(err)
+	}
+	if err := sh.RunV("bash", "-c", fmt.Sprintf("junit2html < %s/junit.xml > %s/junit-summary.html", artifactDir, artifactDir)); err != nil {
+		log.Fatal(err)
+	}
 	// if err := os.WriteFile(localFilePath, data, 0755); err != nil {
 	// 	log.Fatalf("can't write data to a file %s: %+v", localFilePath, err)
 	// }

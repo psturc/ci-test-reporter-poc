@@ -5,6 +5,7 @@ go 1.19
 require (
 	cloud.google.com/go/storage v1.33.0
 	github.com/GoogleCloudPlatform/testgrid v0.0.123
+	github.com/magefile/mage v1.15.0
 	github.com/onsi/ginkgo/v2 v2.4.0
 	google.golang.org/api v0.132.0
 	k8s.io/test-infra v0.0.0-20231006180440-4c1f6657875a
