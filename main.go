@@ -166,7 +166,7 @@ func main() {
 	}
 	fmt.Println(localFilePath)
 
-	if err := sh.RunV("go", "install", "-mod=mod", "github.com/psturc/junit2html@experiment"); err != nil {
+	if err := sh.RunV("go", "install", "-mod=mod", "github.com/psturc/junit2html@poc"); err != nil {
 		log.Fatal(err)
 	}
 	if err := sh.RunV("bash", "-c", fmt.Sprintf("junit2html < %s/junit.xml > %s/junit-summary.html", artifactDir, artifactDir)); err != nil {
