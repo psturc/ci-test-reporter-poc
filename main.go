@@ -80,8 +80,11 @@ func main() {
 	defer cancel()
 
 	fmt.Println("object prefix", objectPrefix)
-	bucketHandle = client.Bucket(bucketName)
 
+	htmlReportLink := gcsBrowserURLPrefix + objectPrefix + "/redhat-appstudio-report/artifacts/junit-summary.html"
+	openshiftCiJunit.Properties.Properties = append(openshiftCiJunit.Properties.Properties, reporters.JUnitProperty{Name: "html-report-link", Value: htmlReportLink})
+
+	bucketHandle = client.Bucket(bucketName)
 	it := bucketHandle.Objects(ctx, &storage.Query{Prefix: objectPrefix})
 
 	fmt.Println("tmp dir:", artifactDir)
